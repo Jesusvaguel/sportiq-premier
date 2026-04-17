@@ -1,24 +1,7 @@
-const API_KEY = import.meta.env.VITE_RAPIDAPI_KEY
-
-// Bugünün tarihini al
-function getToday() {
-  return new Date().toISOString().split('T')[0]
-}
-
-// API-Football ile bugünkü maçları getir
 export async function fetchTodayMatches() {
   try {
-    const date = getToday()
-    const res = await fetch(
-      `https://v3.football.api-sports.io/fixtures?date=${date}`,
-      {
-        method: 'GET',
-        headers: {
-          'x-apisports-key': API_KEY,
-        }
-      }
-    )
-    const data = await res.json()
+    const response = await fetch('/api/matches')
+    const data = await response.json()
     return data
   } catch (err) {
     console.error('API Hatası:', err)
@@ -26,7 +9,6 @@ export async function fetchTodayMatches() {
   }
 }
 
-// API verisini uygulama formatına çevir
 export function transformMatches(apiData) {
   if (!apiData || !apiData.response || apiData.response.length === 0) return []
 
@@ -35,13 +17,12 @@ export function transformMatches(apiData) {
   apiData.response.forEach(item => {
     const league = item.league?.name || 'Diğer'
     const country = item.league?.country || ''
-    const flag = getCountryFlag(country)
 
     if (!grouped[league]) {
       grouped[league] = {
         league,
         leagueEn: league,
-        leagueFlag: flag,
+        leagueFlag: getCountryFlag(country),
         matches: []
       }
     }
@@ -49,7 +30,6 @@ export function transformMatches(apiData) {
     const homeScore = item.goals?.home ?? null
     const awayScore = item.goals?.away ?? null
     const status = item.fixture?.status?.short
-
     const isLive = ['1H','HT','2H','ET','P'].includes(status)
     const isFinished = ['FT','AET','PEN'].includes(status)
 
